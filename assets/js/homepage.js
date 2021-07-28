@@ -2,7 +2,36 @@ var userFormEl = document.querySelector("#user-form");
 var nameInputEl = document.querySelector("#username");
 var repoContainerEl = document.querySelector("#repos-container");
 var repoSearchTerm = document.querySelector("#repo-search-term");
+var languageButtonsEl = document.querySelector("#language-buttons");
 
+
+
+
+
+var formSubmitHandler = function(event) {
+    event.preventDefault();
+    // gets value from input element
+    var username = nameInputEl.value.trim();
+    if (username) {
+        getUserRepos(username);
+        repoContainerEl.textContent = "";
+        nameInputEl.value = "";
+    } else {
+        alert("Please enter a Github username");
+    }
+    
+};
+
+// Happens when search by topic, language buttons, are clicked
+var buttonClickHandler = function(event) {
+    var language = event.target.getAttribute("data-language");
+    if (language) {
+        getFeaturedRepos(language);
+
+        // clears old content
+        repoContainerEl.textContent = "";
+    }
+};
 
 var getUserRepos = function(user) {
     // formats the github api url
@@ -16,7 +45,7 @@ var getUserRepos = function(user) {
                 displayRepos(data, user);
             });
         } else {
-            alert("Error: GitHub User Not Found");
+            alert("Error: " + response.statusText);
         }
    })
    .catch(function(error) {
@@ -25,18 +54,20 @@ var getUserRepos = function(user) {
    
 };
 
+var getFeaturedRepos = function(language) {
+    var apiUrl = "https://api.github.com/search/repositories?q=" + language + "+is:featured&sort=help-wanted-issues";
 
-var formSubmitHandler = function(event) {
-    event.preventDefault();
-    // gets value from input element
-    var username = nameInputEl.value.trim();
-    if (username) {
-        getUserRepos(username);
-        nameInputEl.value = "";
-    } else {
-        alert("Please enter a Github username");
-    }
-    console.log(event);
+    fetch(apiUrl).then(function(response) {
+        if (response.ok) {
+            response.json().then(function(data) {
+                displayRepos(data.items, language);
+                console.log(response);
+            });
+            
+        } else {
+            alert("error: " + response.statusText);
+        }
+    });
 };
 
 
@@ -89,5 +120,13 @@ var displayRepos = function(repos, searchTerm) {
 }
 
 
+
+
+
+// event listeners
 userFormEl.addEventListener("submit", formSubmitHandler);
+
+languageButtonsEl.addEventListener("click", buttonClickHandler);
+
+
 
